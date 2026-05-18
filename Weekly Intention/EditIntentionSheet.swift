@@ -47,11 +47,6 @@ struct EditIntentionSheet: View {
     }
 
     private var rangeTitle: String {
-        let end = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-        let df = DateFormatter()
-        df.calendar = calendar
-        df.locale = .current
-        df.setLocalizedDateFormatFromTemplate("MMMM d")
-        return "\(df.string(from: weekStart)) – \(df.string(from: end))"
+        weekRangeText(for: weekStart)
     }
 }

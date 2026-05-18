@@ -14,7 +14,7 @@ struct WeekSlide: View {
 
             VStack(alignment: .leading, spacing: 18) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(weekRangeText)
+                    Text(weekRangeText(for: weekStart))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
@@ -50,12 +50,4 @@ struct WeekSlide: View {
         calendar.component(.weekOfYear, from: weekStart)
     }
 
-    private var weekRangeText: String {
-        let end = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-        let df = DateFormatter()
-        df.calendar = calendar
-        df.locale = .current
-        df.setLocalizedDateFormatFromTemplate("MMM d")
-        return "\(df.string(from: weekStart)) – \(df.string(from: end))"
-    }
 }

@@ -9,14 +9,10 @@ import WidgetKit
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var stored: [WeeklyIntention]
-    @EnvironmentObject private var appState: AppState
-    @EnvironmentObject private var syncStatus: SyncStatus
+    @Environment(AppState.self) private var appState
+    @Environment(SyncStatus.self) private var syncStatus
 
-    private let calendar: Calendar = {
-        var cal = Calendar(identifier: .iso8601) // Monday-based
-        cal.firstWeekday = 2
-        return cal
-    }()
+    private let calendar = sharedCalendar
 
     private let weeksBefore = 52
     private let weeksAfter  = 52
@@ -24,6 +20,7 @@ struct ContentView: View {
     @State private var selectedIndex: Int = 0
     @State private var editingWeekStart: Date?
     @State private var draftText: String = ""
+    @State private var weeks: [Date] = []
 
     #if os(macOS)
     @FocusState private var macContentFocused: Bool
@@ -31,8 +28,6 @@ struct ContentView: View {
 
 
     var body: some View {
-        let weeks = weekStartsAroundNow()
-
         Group {
             #if os(iOS)
             VStack(spacing: 0) {
@@ -100,7 +95,7 @@ struct ContentView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
-            .onAppear { selectedIndex = weeksBefore }
+            .onAppear { initWeeks() }
 
             #elseif os(macOS)
             // macOS: explicit navigation instead of an unlabeled TabView picker.
@@ -182,7 +177,7 @@ struct ContentView: View {
             .focused($macContentFocused)
             .focusEffectDisabled()
             .onAppear {
-                selectedIndex = weeksBefore
+                initWeeks()
                 macContentFocused = true
             }
 
@@ -253,7 +248,7 @@ struct ContentView: View {
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
-            .onAppear { selectedIndex = weeksBefore }
+            .onAppear { initWeeks() }
             #endif
         }
         .sheet(item: editingWeekStartDateItem) { (item: DateItem) in
@@ -269,7 +264,7 @@ struct ContentView: View {
             .presentationDetents([.medium])
             #endif
         }
-        .sheet(isPresented: $appState.isRecallPresented) {
+        .sheet(isPresented: Bindable(appState).isRecallPresented) {
             RecallSheet(
                 calendar: calendar,
                 items: stored,
@@ -283,7 +278,7 @@ struct ContentView: View {
                     appState.isRecallPresented = false
                 }
             )
-            .environmentObject(appState)
+            .environment(appState)
         }
     }
 
@@ -293,6 +288,11 @@ struct ContentView: View {
 
     private func currentWeekStart(from weeks: [Date]) -> Date {
         weeks[safe: selectedIndex] ?? currentWeekStartFallback()
+    }
+
+    private func initWeeks() {
+        weeks = weekStartsAroundNow()
+        selectedIndex = weeksBefore
     }
 
     private func weekStartsAroundNow() -> [Date] {
@@ -361,6 +361,12 @@ struct ContentView: View {
             #if canImport(WidgetKit)
             WidgetCenter.shared.reloadTimelines(ofKind: "WeeklyIntentionWidget")
             #endif
+
+            // Push to Apple Watch via WatchConnectivity
+            PhoneToWatchConnector.shared.sendIntention(
+                weekStartISO: WidgetSharedStore.isoDateString(currentWeek),
+                text: trimmed
+            )
         }
 
     }
@@ -385,7 +391,7 @@ private struct RecallSheet: View {
     let onClose: () -> Void
 
     @State private var searchText: String = ""
-    @EnvironmentObject private var appState: AppState
+    @Environment(AppState.self) private var appState
     @FocusState private var isSearchFocused: Bool
 
     private var sortedItems: [WeeklyIntention] {
@@ -429,6 +435,7 @@ private struct RecallSheet: View {
                                         .font(.body)
                                         .lineLimit(2)
                                 }
+                                // Uses global weekRangeText(for:)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .buttonStyle(.plain)
@@ -442,8 +449,8 @@ private struct RecallSheet: View {
             .onAppear {
                 if appState.shouldFocusRecallSearch {
                     appState.shouldFocusRecallSearch = false
-                    // Defer focus to the next run loop so SwiftUI has attached the searchable field.
-                    DispatchQueue.main.async {
+                    // Defer focus so SwiftUI has attached the searchable field.
+                    Task { @MainActor in
                         isSearchFocused = true
                     }
                 }
@@ -463,14 +470,6 @@ private struct RecallSheet: View {
         #endif
     }
 
-    private func weekRangeText(for weekStart: Date) -> String {
-        let end = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-        let df = DateFormatter()
-        df.calendar = calendar
-        df.locale = .current
-        df.setLocalizedDateFormatFromTemplate("MMM d")
-        return "\(df.string(from: weekStart)) – \(df.string(from: end))"
-    }
 }
 
 private extension Array {

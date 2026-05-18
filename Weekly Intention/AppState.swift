@@ -1,12 +1,13 @@
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-final class AppState: ObservableObject {
-    @Published var isRecallPresented: Bool = false
+@Observable
+final class AppState {
+    var isRecallPresented: Bool = false
 
     /// Set to true right before presenting Recall so the search field can autofocus.
-    @Published var shouldFocusRecallSearch: Bool = false
+    var shouldFocusRecallSearch: Bool = false
 
     func presentRecall(focusSearch: Bool = true) {
         shouldFocusRecallSearch = focusSearch

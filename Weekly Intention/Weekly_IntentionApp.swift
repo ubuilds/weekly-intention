@@ -5,9 +5,9 @@ import SwiftData
 struct WeeklyIntentionApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
-    @StateObject private var appState = AppState()
-    @StateObject private var networkStatus = NetworkStatus()
-    @StateObject private var syncStatus = SyncStatus()
+    @State private var appState = AppState()
+    @State private var networkStatus = NetworkStatus()
+    @State private var syncStatus = SyncStatus()
     private let modelContainer: ModelContainer
 
     init() {
@@ -23,14 +23,17 @@ struct WeeklyIntentionApp: App {
         } catch {
             fatalError("❌ SwiftData: Failed to create CloudKit-backed ModelContainer. Error: \(error)")
         }
+
+        // Activate WatchConnectivity so we can push intention updates to the watch.
+        PhoneToWatchConnector.shared.activate()
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(appState)
-                .environmentObject(networkStatus)
-                .environmentObject(syncStatus)
+                .environment(appState)
+                .environment(networkStatus)
+                .environment(syncStatus)
                 .onAppear {
                     syncStatus.handleNetworkChange(isOnline: networkStatus.isOnline)
                 }
@@ -55,6 +58,12 @@ struct WeeklyIntentionApp: App {
                                 if let current = try modelContainer.mainContext.fetch(descriptor).first {
                                     WidgetSharedStore.writeCurrentWeekIntention(
                                         weekStart: current.weekStart,
+                                        text: current.text
+                                    )
+
+                                    // Also push to Apple Watch
+                                    PhoneToWatchConnector.shared.sendIntention(
+                                        weekStartISO: WidgetSharedStore.isoDateString(current.weekStart),
                                         text: current.text
                                     )
                                 }

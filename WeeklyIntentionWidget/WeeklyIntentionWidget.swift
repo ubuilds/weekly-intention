@@ -51,7 +51,7 @@ struct WeeklyIntentionWidgetView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(weekRangeTitle(from: entry.weekStart))
+            Text(weekRangeText(for: entry.weekStart))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -79,17 +79,6 @@ struct WeeklyIntentionWidgetView: View {
         }
     }
 
-    private func weekRangeTitle(from weekStart: Date) -> String {
-        var cal = Calendar(identifier: .iso8601)
-        cal.firstWeekday = 2
-        let end = cal.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-
-        let df = DateFormatter()
-        df.calendar = cal
-        df.locale = .current
-        df.setLocalizedDateFormatFromTemplate("MMM d")
-        return "\(df.string(from: weekStart)) – \(df.string(from: end))"
-    }
 }
 
 struct WeeklyIntentionWidget: Widget {
