@@ -34,3 +34,6 @@ build/
 
 # Obsidian
 .obsidian/
+
+# Private project docs
+docs/private/
