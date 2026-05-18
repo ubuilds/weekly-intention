@@ -15,6 +15,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "23CC22CD2F64690B00C3AA73"
+               BuildableName = "WeeklyIntentionWatchApp.app"
+               BlueprintName = "WeeklyIntentionWatchApp"
+               ReferencedContainer = "container:Weekly Intention.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "2364B95F2EFD8C7900C3F912"
                BuildableName = "Weekly Intention.app"
                BlueprintName = "Weekly Intention"
@@ -44,9 +58,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "2364B95F2EFD8C7900C3F912"
-            BuildableName = "Weekly Intention.app"
-            BlueprintName = "Weekly Intention"
+            BlueprintIdentifier = "23CC22CD2F64690B00C3AA73"
+            BuildableName = "WeeklyIntentionWatchApp.app"
+            BlueprintName = "WeeklyIntentionWatchApp"
             ReferencedContainer = "container:Weekly Intention.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -61,9 +75,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "2364B95F2EFD8C7900C3F912"
-            BuildableName = "Weekly Intention.app"
-            BlueprintName = "Weekly Intention"
+            BlueprintIdentifier = "23CC22CD2F64690B00C3AA73"
+            BuildableName = "WeeklyIntentionWatchApp.app"
+            BlueprintName = "WeeklyIntentionWatchApp"
             ReferencedContainer = "container:Weekly Intention.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

@@ -1,15 +1,16 @@
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-final class SyncStatus: ObservableObject {
+@Observable
+final class SyncStatus {
     enum State: Equatable {
         case none
         case offline
         case syncing
     }
 
-    @Published private(set) var state: State = .none
+    private(set) var state: State = .none
 
     func handleNetworkChange(isOnline: Bool) {
         if !isOnline {

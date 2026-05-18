@@ -12,6 +12,10 @@
 		236FE0192F0D957E003CED2A /* WeeklyIntentionWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 236FE00C2F0D957D003CED2A /* WeeklyIntentionWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		236FE0202F0D95D4003CED2A /* WidgetSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */; };
 		236FE0212F0D95EA003CED2A /* WidgetSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */; };
+		23CC22D82F64690D00C3AA73 /* WeeklyIntentionWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		23CC22E22F64698200C3AA73 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23E23AA22F03DB5D00547DDE /* WidgetKit.framework */; };
+		23CC22E32F64698200C3AA73 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23E23AA42F03DB5D00547DDE /* SwiftUI.framework */; };
+		23CC22EE2F64698300C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 23CC22E12F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,9 +26,45 @@
 			remoteGlobalIDString = 236FE00B2F0D957D003CED2A;
 			remoteInfo = WeeklyIntentionWidgetExtension;
 		};
+		23CC22D62F64690D00C3AA73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2364B9582EFD8C7900C3F912 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 23CC22CD2F64690B00C3AA73;
+			remoteInfo = "WeeklyIntentionWatch Watch App";
+		};
+		23CC22EC2F64698300C3AA73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2364B9582EFD8C7900C3F912 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 23CC22E02F64698200C3AA73;
+			remoteInfo = WeeklyIntentionWatchWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		23CC22DC2F64690D00C3AA73 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				23CC22D82F64690D00C3AA73 /* WeeklyIntentionWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23CC22F32F64698300C3AA73 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				23CC22EE2F64698300C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		23E23AB12F03DB5E00547DDE /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -44,6 +84,9 @@
 		236FE01E2F0D959E003CED2A /* WeeklyIntentionWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WeeklyIntentionWidgetExtension.entitlements; sourceTree = "<group>"; };
 		236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSharedStore.swift; sourceTree = "<group>"; };
 		23C87D572F03EFF2004DDDC5 /* WeeklyIntention.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WeeklyIntention.entitlements; sourceTree = "<group>"; };
+		23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WeeklyIntentionWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		23CC22E12F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WeeklyIntentionWatchWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		23CC22F42F646AA300C3AA73 /* WeeklyIntentionWatchWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WeeklyIntentionWatchWidgetExtension.entitlements; sourceTree = "<group>"; };
 		23E23AA22F03DB5D00547DDE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
 		23E23AA42F03DB5D00547DDE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -55,6 +98,13 @@
 				Info.plist,
 			);
 			target = 236FE00B2F0D957D003CED2A /* WeeklyIntentionWidgetExtension */;
+		};
+		23CC22EF2F64698300C3AA73 /* Exceptions for "WeeklyIntentionWatchWidget" folder in "WeeklyIntentionWatchWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 23CC22E02F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -70,6 +120,19 @@
 				236FE01C2F0D957E003CED2A /* Exceptions for "WeeklyIntentionWidget" folder in "WeeklyIntentionWidgetExtension" target */,
 			);
 			path = WeeklyIntentionWidget;
+			sourceTree = "<group>";
+		};
+		23CC22CF2F64690B00C3AA73 /* WeeklyIntentionWatchApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WeeklyIntentionWatchApp;
+			sourceTree = "<group>";
+		};
+		23CC22E42F64698200C3AA73 /* WeeklyIntentionWatchWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				23CC22EF2F64698300C3AA73 /* Exceptions for "WeeklyIntentionWatchWidget" folder in "WeeklyIntentionWatchWidgetExtension" target */,
+			);
+			path = WeeklyIntentionWatchWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -91,17 +154,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		23CC22CB2F64690B00C3AA73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23CC22DE2F64698200C3AA73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				23CC22E32F64698200C3AA73 /* SwiftUI.framework in Frameworks */,
+				23CC22E22F64698200C3AA73 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		2364B9572EFD8C7900C3F912 = {
 			isa = PBXGroup;
 			children = (
+				23CC22F42F646AA300C3AA73 /* WeeklyIntentionWatchWidgetExtension.entitlements */,
 				236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */,
 				236FE01E2F0D959E003CED2A /* WeeklyIntentionWidgetExtension.entitlements */,
 				23C87D572F03EFF2004DDDC5 /* WeeklyIntention.entitlements */,
 				2364B9622EFD8C7900C3F912 /* Weekly Intention */,
 				236FE00F2F0D957D003CED2A /* WeeklyIntentionWidget */,
+				23CC22CF2F64690B00C3AA73 /* WeeklyIntentionWatchApp */,
+				23CC22E42F64698200C3AA73 /* WeeklyIntentionWatchWidget */,
 				23E23AA12F03DB5D00547DDE /* Frameworks */,
 				2364B9612EFD8C7900C3F912 /* Products */,
 			);
@@ -112,6 +194,8 @@
 			children = (
 				2364B9602EFD8C7900C3F912 /* Weekly Intention.app */,
 				236FE00C2F0D957D003CED2A /* WeeklyIntentionWidgetExtension.appex */,
+				23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */,
+				23CC22E12F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -136,11 +220,13 @@
 				2364B95D2EFD8C7900C3F912 /* Frameworks */,
 				2364B95E2EFD8C7900C3F912 /* Resources */,
 				23E23AB12F03DB5E00547DDE /* Embed Foundation Extensions */,
+				23CC22DC2F64690D00C3AA73 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				236FE0182F0D957E003CED2A /* PBXTargetDependency */,
+				23CC22D72F64690D00C3AA73 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				2364B9622EFD8C7900C3F912 /* Weekly Intention */,
@@ -174,6 +260,52 @@
 			productReference = 236FE00C2F0D957D003CED2A /* WeeklyIntentionWidgetExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		23CC22CD2F64690B00C3AA73 /* WeeklyIntentionWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 23CC22D92F64690D00C3AA73 /* Build configuration list for PBXNativeTarget "WeeklyIntentionWatchApp" */;
+			buildPhases = (
+				23CC22CA2F64690B00C3AA73 /* Sources */,
+				23CC22CB2F64690B00C3AA73 /* Frameworks */,
+				23CC22CC2F64690B00C3AA73 /* Resources */,
+				23CC22F32F64698300C3AA73 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				23CC22ED2F64698300C3AA73 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				23CC22CF2F64690B00C3AA73 /* WeeklyIntentionWatchApp */,
+			);
+			name = WeeklyIntentionWatchApp;
+			packageProductDependencies = (
+			);
+			productName = "WeeklyIntentionWatch Watch App";
+			productReference = 23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		23CC22E02F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 23CC22F02F64698300C3AA73 /* Build configuration list for PBXNativeTarget "WeeklyIntentionWatchWidgetExtension" */;
+			buildPhases = (
+				23CC22DD2F64698200C3AA73 /* Sources */,
+				23CC22DE2F64698200C3AA73 /* Frameworks */,
+				23CC22DF2F64698200C3AA73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				23CC22E42F64698200C3AA73 /* WeeklyIntentionWatchWidget */,
+			);
+			name = WeeklyIntentionWatchWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = WeeklyIntentionWatchWidgetExtension;
+			productReference = 23CC22E12F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -181,14 +313,20 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					2364B95F2EFD8C7900C3F912 = {
 						CreatedOnToolsVersion = 26.2;
 					};
 					236FE00B2F0D957D003CED2A = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					23CC22CD2F64690B00C3AA73 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					23CC22E02F64698200C3AA73 = {
+						CreatedOnToolsVersion = 26.3;
 					};
 				};
 			};
@@ -208,6 +346,8 @@
 			targets = (
 				2364B95F2EFD8C7900C3F912 /* Weekly Intention */,
 				236FE00B2F0D957D003CED2A /* WeeklyIntentionWidgetExtension */,
+				23CC22CD2F64690B00C3AA73 /* WeeklyIntentionWatchApp */,
+				23CC22E02F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -221,6 +361,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		236FE00A2F0D957D003CED2A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23CC22CC2F64690B00C3AA73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23CC22DF2F64698200C3AA73 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -246,6 +400,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		23CC22CA2F64690B00C3AA73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		23CC22DD2F64698200C3AA73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -253,6 +421,16 @@
 			isa = PBXTargetDependency;
 			target = 236FE00B2F0D957D003CED2A /* WeeklyIntentionWidgetExtension */;
 			targetProxy = 236FE0172F0D957E003CED2A /* PBXContainerItemProxy */;
+		};
+		23CC22D72F64690D00C3AA73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 23CC22CD2F64690B00C3AA73 /* WeeklyIntentionWatchApp */;
+			targetProxy = 23CC22D62F64690D00C3AA73 /* PBXContainerItemProxy */;
+		};
+		23CC22ED2F64698300C3AA73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 23CC22E02F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension */;
+			targetProxy = 23CC22EC2F64698300C3AA73 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -291,6 +469,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -314,6 +493,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -353,6 +533,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -369,6 +550,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -381,6 +563,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Weekly Intention/Weekly Intention.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -427,6 +610,7 @@
 				CODE_SIGN_ENTITLEMENTS = "Weekly Intention/Weekly Intention.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -473,6 +657,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeeklyIntentionWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -517,6 +702,7 @@
 				CODE_SIGN_ENTITLEMENTS = WeeklyIntentionWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 28C774C4SH;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -553,6 +739,144 @@
 			};
 			name = Release;
 		};
+		23CC22DA2F64690D00C3AA73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "WeeklyIntentionWatchApp/WeeklyIntentionWatchApp.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28C774C4SH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Weekly Intention";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "uweb.Weekly-Intention";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "uweb.Weekly-Intention.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		23CC22DB2F64690D00C3AA73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "WeeklyIntentionWatchApp/WeeklyIntentionWatchApp.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28C774C4SH;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Weekly Intention";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "uweb.Weekly-Intention";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "uweb.Weekly-Intention.watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
+		23CC22F12F64698300C3AA73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = WeeklyIntentionWatchWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28C774C4SH;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WeeklyIntentionWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Weekly Intention";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "uweb.Weekly-Intention.watchkitapp.WeeklyIntentionWatchWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		23CC22F22F64698300C3AA73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = WeeklyIntentionWatchWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 28C774C4SH;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = WeeklyIntentionWatchWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Weekly Intention";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "uweb.Weekly-Intention.watchkitapp.WeeklyIntentionWatchWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				VALIDATE_PRODUCT = YES;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -579,6 +903,24 @@
 			buildConfigurations = (
 				236FE01A2F0D957E003CED2A /* Debug */,
 				236FE01B2F0D957E003CED2A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		23CC22D92F64690D00C3AA73 /* Build configuration list for PBXNativeTarget "WeeklyIntentionWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				23CC22DA2F64690D00C3AA73 /* Debug */,
+				23CC22DB2F64690D00C3AA73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		23CC22F02F64698300C3AA73 /* Build configuration list for PBXNativeTarget "WeeklyIntentionWatchWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				23CC22F12F64698300C3AA73 /* Debug */,
+				23CC22F22F64698300C3AA73 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

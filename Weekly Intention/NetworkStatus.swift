@@ -1,10 +1,11 @@
 import Foundation
 import Network
-import Combine
+import Observation
 
 @MainActor
-final class NetworkStatus: ObservableObject {
-    @Published private(set) var isOnline: Bool = true
+@Observable
+final class NetworkStatus {
+    private(set) var isOnline: Bool = true
 
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "NetworkStatus.Monitor")
