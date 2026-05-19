@@ -44,11 +44,10 @@ struct WeeklyIntentionApp: App {
                     if newPhase == .active {
                         syncStatus.handleNetworkChange(isOnline: networkStatus.isOnline)
 
-                        // Mirror current-week intention into widget cache after potential CloudKit sync
-                        let calendar = Calendar.current
-                        let now = Date()
-                        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
-                        let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) ?? now
+                        // Mirror current-week intention into widget cache after potential CloudKit sync.
+                        // Week math goes through the shared ISO (Monday-based) calendar — never Calendar.current.
+                        let weekStart = WidgetSharedStore.currentISOWeekStart()
+                        let weekEnd = sharedCalendar.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart
 
                         Task {
                             do {
