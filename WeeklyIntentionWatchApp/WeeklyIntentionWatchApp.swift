@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WidgetKit
 
 @main
 struct WeeklyIntentionWatchApp: App {
@@ -32,7 +33,7 @@ struct WatchContentView: View {
                     .foregroundStyle(.secondary)
                 Text("Weekly Intention")
                     .font(.headline)
-                Text("Set your intention on iPhone — it appears here and in the Smart Stack.")
+                Text("Open Weekly Intention on iPhone to sync.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -46,9 +47,23 @@ struct WatchContentView: View {
             }
         }
         .padding()
-        .onAppear { refresh() }
+        .onAppear {
+            refresh()
+            WatchConnectivityReceiver.shared.requestIntentionFromPhone()
+            // Belt-and-suspenders: kick the widget directly from the app process too,
+            // not just from the WC receiver. Sometimes one path lands when the other doesn't.
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { refresh() }
+            if phase == .active {
+                refresh()
+                WatchConnectivityReceiver.shared.requestIntentionFromPhone()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .watchIntentionUpdated)) { _ in
+            refresh()
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 

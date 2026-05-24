@@ -43,5 +43,27 @@ final class PhoneToWatchConnector: NSObject, WCSessionDelegate {
         // Re-activate for multi-watch support
         session.activate()
     }
+
+    /// Watch asks for the current intention on launch (see WatchConnectivityReceiver.requestIntentionFromPhone).
+    /// Reply with whatever the iOS App Group cache currently holds; the watch persists it
+    /// into its own App Group and reloads the widget.
+    func session(_ session: WCSession,
+                 didReceiveMessage message: [String: Any],
+                 replyHandler: @escaping ([String: Any]) -> Void) {
+        guard message["request"] as? String == "currentIntention" else {
+            replyHandler([:])
+            return
+        }
+
+        let snapshot = WidgetSharedStore.read()
+        var reply: [String: Any] = [
+            "widget.weekStartISO": WidgetSharedStore.isoDateString(snapshot.weekStart),
+            "widget.intentionText": snapshot.text
+        ]
+        if let updatedAt = snapshot.updatedAt {
+            reply["widget.updatedAtISO"] = WidgetSharedStore.isoDateString(updatedAt)
+        }
+        replyHandler(reply)
+    }
 }
 #endif
