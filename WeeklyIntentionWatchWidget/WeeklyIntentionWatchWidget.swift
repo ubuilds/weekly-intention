@@ -119,7 +119,7 @@ private struct RectangularView: View {
                 .widgetAccentable()
 
             if entry.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("Set your intention")
+                Text("Open on iPhone")
                     .font(.headline)
                     .foregroundStyle(.secondary)
             } else {
@@ -161,7 +161,7 @@ private struct InlineView: View {
 
     var body: some View {
         if entry.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            Text("Set intention")
+            Text("Open on iPhone")
         } else {
             Text(entry.text)
         }
