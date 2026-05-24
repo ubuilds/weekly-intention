@@ -484,9 +484,20 @@ private struct RecallSheet: View {
     /// known at struct-init time means the toolbar always renders the
     /// ShareLink and the file content is updated separately via .onAppear /
     /// .onChange below.
-    private let exportFileURL: URL = FileManager.default
-        .temporaryDirectory
-        .appendingPathComponent("WeeklyIntentions.md")
+    ///
+    /// We also pre-create an empty placeholder file at struct-init time, in
+    /// case macOS `ShareLink` hides itself when its URL points at a path
+    /// that doesn't exist on disk yet (the real content is overwritten by
+    /// `writeExportFile()` in `.onAppear`).
+    private let exportFileURL: URL = {
+        let url = FileManager.default
+            .temporaryDirectory
+            .appendingPathComponent("WeeklyIntentions.md")
+        if !FileManager.default.fileExists(atPath: url.path) {
+            try? Data().write(to: url)
+        }
+        return url
+    }()
 
     /// Deduped intentions keyed by `weekStart`. Single pass over `items` shared
     /// by both List (rendered as a sorted array) and Grid (looked up by date).
@@ -549,32 +560,31 @@ private struct RecallSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { onClose() }
                 }
-                // Group the trailing actions explicitly. macOS sheets render
-                // separate `ToolbarItem(.primaryAction)` items unreliably —
-                // one of them gets dropped in the bottom toolbar — but a
-                // `ToolbarItemGroup` keeps both rendered as siblings.
-                ToolbarItemGroup(placement: .primaryAction) {
-                    if !items.isEmpty {
-                        // Mode toggle: one icon that flips between List and
-                        // Grid. The icon shows the *target* mode — tap to go
-                        // there. Lives in the toolbar so the content area
-                        // stays uncluttered.
-                        Button {
-                            mode = (mode == .list) ? .grid : .list
-                        } label: {
-                            Image(systemName: mode == .list ? "square.grid.2x2" : "list.bullet")
-                        }
-                        .accessibilityLabel(mode == .list ? "Switch to grid view" : "Switch to list view")
-                        .help(mode == .list ? "Grid view" : "List view")
+                // Pack the trailing actions inside a single ToolbarItem with
+                // an HStack. macOS sheet toolbars otherwise drop the second
+                // `.primaryAction` slot (and even ToolbarItemGroup didn't help
+                // — the export button never made it onto the bottom bar).
+                // One slot, two buttons inside it: macOS can't lose anything.
+                if !items.isEmpty {
+                    ToolbarItem(placement: .primaryAction) {
+                        HStack(spacing: 12) {
+                            // Mode toggle: one icon that flips between List
+                            // and Grid. The icon shows the *target* mode —
+                            // tap to go there.
+                            Button {
+                                mode = (mode == .list) ? .grid : .list
+                            } label: {
+                                Image(systemName: mode == .list ? "square.grid.2x2" : "list.bullet")
+                            }
+                            .accessibilityLabel(mode == .list ? "Switch to grid view" : "Switch to list view")
+                            .help(mode == .list ? "Grid view" : "List view")
 
-                        // ShareLink is unconditional (no `if let`) so the macOS
-                        // toolbar always renders it. The file content is
-                        // written below in .onAppear / .onChange.
-                        ShareLink(item: exportFileURL) {
-                            Image(systemName: "square.and.arrow.up")
+                            ShareLink(item: exportFileURL) {
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            .accessibilityLabel("Export intentions")
+                            .help("Export intentions as Markdown")
                         }
-                        .accessibilityLabel("Export intentions")
-                        .help("Export intentions as Markdown")
                     }
                 }
             }
