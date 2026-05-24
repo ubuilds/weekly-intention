@@ -1,4 +1,5 @@
 import Foundation
+#if canImport(WatchConnectivity)
 import WatchConnectivity
 
 /// Sends the current week's intention to the paired Apple Watch via WatchConnectivity.
@@ -43,3 +44,4 @@ final class PhoneToWatchConnector: NSObject, WCSessionDelegate {
         session.activate()
     }
 }
+#endif

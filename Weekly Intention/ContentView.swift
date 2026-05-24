@@ -363,10 +363,12 @@ struct ContentView: View {
             #endif
 
             // Push to Apple Watch via WatchConnectivity
+            #if canImport(WatchConnectivity)
             PhoneToWatchConnector.shared.sendIntention(
                 weekStartISO: WidgetSharedStore.isoDateString(currentWeek),
                 text: trimmed
             )
+            #endif
         }
 
     }

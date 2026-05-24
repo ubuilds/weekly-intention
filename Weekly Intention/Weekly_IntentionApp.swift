@@ -25,7 +25,9 @@ struct WeeklyIntentionApp: App {
         }
 
         // Activate WatchConnectivity so we can push intention updates to the watch.
+        #if canImport(WatchConnectivity)
         PhoneToWatchConnector.shared.activate()
+        #endif
     }
 
     var body: some Scene {
@@ -61,10 +63,12 @@ struct WeeklyIntentionApp: App {
                                     )
 
                                     // Also push to Apple Watch
+                                    #if canImport(WatchConnectivity)
                                     PhoneToWatchConnector.shared.sendIntention(
                                         weekStartISO: WidgetSharedStore.isoDateString(current.weekStart),
                                         text: current.text
                                     )
+                                    #endif
                                 }
                             } catch {
                                 print("Widget mirror fetch failed:", error)

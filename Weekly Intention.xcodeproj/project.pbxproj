@@ -12,7 +12,7 @@
 		236FE0192F0D957E003CED2A /* WeeklyIntentionWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 236FE00C2F0D957D003CED2A /* WeeklyIntentionWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		236FE0202F0D95D4003CED2A /* WidgetSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */; };
 		236FE0212F0D95EA003CED2A /* WidgetSharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236FE01F2F0D95CE003CED2A /* WidgetSharedStore.swift */; };
-		23CC22D82F64690D00C3AA73 /* WeeklyIntentionWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		23CC22D82F64690D00C3AA73 /* WeeklyIntentionWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 23CC22CE2F64690B00C3AA73 /* WeeklyIntentionWatchApp.app */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		23CC22E22F64698200C3AA73 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23E23AA22F03DB5D00547DDE /* WidgetKit.framework */; };
 		23CC22E32F64698200C3AA73 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23E23AA42F03DB5D00547DDE /* SwiftUI.framework */; };
 		23CC22EE2F64698300C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 23CC22E12F64698200C3AA73 /* WeeklyIntentionWatchWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -424,6 +424,7 @@
 		};
 		23CC22D72F64690D00C3AA73 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = 23CC22CD2F64690B00C3AA73 /* WeeklyIntentionWatchApp */;
 			targetProxy = 23CC22D62F64690D00C3AA73 /* PBXContainerItemProxy */;
 		};
