@@ -61,7 +61,7 @@ struct ContentView: View {
                     statusPill
 
                     Button {
-                        appState.presentRecall(focusSearch: true)
+                        appState.presentRecall(focusSearch: false)
                     } label: {
                         Label("Recall", systemImage: "clock.arrow.circlepath")
                             .labelStyle(.iconOnly)
@@ -126,7 +126,7 @@ struct ContentView: View {
                     statusPill
 
                     Button("Recall") {
-                        appState.presentRecall(focusSearch: true)
+                        appState.presentRecall(focusSearch: false)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -198,7 +198,7 @@ struct ContentView: View {
                     statusPill
 
                     Button {
-                        appState.presentRecall(focusSearch: true)
+                        appState.presentRecall(focusSearch: false)
                     } label: {
                         Label("Recall", systemImage: "clock.arrow.circlepath")
                             .labelStyle(.iconOnly)
@@ -520,9 +520,9 @@ private struct RecallSheet: View {
                 }
             }
             .navigationTitle("Recall")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
+            // Inline on both platforms — keeps the title at toolbar height so
+            // it sits next to the search field rather than on its own row.
+            .toolbarTitleDisplayMode(.inline)
             // Search applies to List mode only — Grid mode is for scanning the
             // whole year visually, not filtering it down.
             .modifier(SearchableInListMode(mode: mode, searchText: $searchText, isSearchFocused: $isSearchFocused))
@@ -539,12 +539,16 @@ private struct RecallSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { onClose() }
                 }
-                // Mode toggle: a single icon that flips between List and Grid.
-                // Lives in the toolbar so the content area stays uncluttered —
-                // the in-content segmented picker added too much vertical noise
-                // for a feature most opens won't touch.
-                ToolbarItem(placement: .primaryAction) {
+                // Group the trailing actions explicitly. macOS sheets render
+                // separate `ToolbarItem(.primaryAction)` items unreliably —
+                // one of them gets dropped in the bottom toolbar — but a
+                // `ToolbarItemGroup` keeps both rendered as siblings.
+                ToolbarItemGroup(placement: .primaryAction) {
                     if !items.isEmpty {
+                        // Mode toggle: one icon that flips between List and
+                        // Grid. The icon shows the *target* mode — tap to go
+                        // there. Lives in the toolbar so the content area
+                        // stays uncluttered.
                         Button {
                             mode = (mode == .list) ? .grid : .list
                         } label: {
@@ -552,14 +556,14 @@ private struct RecallSheet: View {
                         }
                         .accessibilityLabel(mode == .list ? "Switch to grid view" : "Switch to list view")
                         .help(mode == .list ? "Grid view" : "List view")
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    if !items.isEmpty, let url = exportFileURL {
-                        ShareLink(item: url) {
-                            Image(systemName: "square.and.arrow.up")
+
+                        if let url = exportFileURL {
+                            ShareLink(item: url) {
+                                Image(systemName: "square.and.arrow.up")
+                            }
+                            .accessibilityLabel("Export intentions")
+                            .help("Export intentions as Markdown")
                         }
-                        .accessibilityLabel("Export intentions")
                     }
                 }
             }
