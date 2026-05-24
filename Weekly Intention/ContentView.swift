@@ -397,7 +397,21 @@ private struct RecallSheet: View {
     @FocusState private var isSearchFocused: Bool
 
     private var sortedItems: [WeeklyIntention] {
-        let base = items.sorted { $0.weekStart > $1.weekStart }
+        // Defensive read-side dedupe: CloudKit can surface multiple rows for the
+        // same weekStart if two devices wrote before convergence. saveIntention()
+        // enforces one-per-week on write, but stale duplicates may still exist.
+        // Prefer the entry with the longest trimmed text on ties (best guess at
+        // "the real one"); ordering is otherwise stable.
+        let deduped = Dictionary(grouping: items, by: { $0.weekStart })
+            .values
+            .compactMap { group in
+                group.max { lhs, rhs in
+                    lhs.text.trimmingCharacters(in: .whitespacesAndNewlines).count
+                        < rhs.text.trimmingCharacters(in: .whitespacesAndNewlines).count
+                }
+            }
+
+        let base = deduped.sorted { $0.weekStart > $1.weekStart }
         guard !searchText.isEmpty else { return base }
         return base.filter { $0.text.localizedCaseInsensitiveContains(searchText) }
     }
@@ -424,7 +438,7 @@ private struct RecallSheet: View {
                     .padding()
                 } else {
                     List {
-                        ForEach(sortedItems, id: \.weekStart) { item in
+                        ForEach(sortedItems, id: \.id) { item in
                             Button {
                                 onPickWeekStart(item.weekStart)
                             } label: {
