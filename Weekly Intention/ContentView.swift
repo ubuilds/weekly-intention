@@ -473,10 +473,20 @@ private struct RecallSheet: View {
 
     @State private var searchText: String = ""
     @State private var mode: Mode = .list
-    @State private var exportFileURL: URL?
     @State private var weekPendingDeletion: Date?
     @Environment(AppState.self) private var appState
     @FocusState private var isSearchFocused: Bool
+
+    /// Stable URL for the exported Markdown file. Held as a `let` (not `@State`)
+    /// because macOS toolbars in sheets don't reliably re-render when an
+    /// optional `@State` URL flips from nil to non-nil — the ShareLink
+    /// `if let` short-circuits and the button never appears. Keeping the URL
+    /// known at struct-init time means the toolbar always renders the
+    /// ShareLink and the file content is updated separately via .onAppear /
+    /// .onChange below.
+    private let exportFileURL: URL = FileManager.default
+        .temporaryDirectory
+        .appendingPathComponent("WeeklyIntentions.md")
 
     /// Deduped intentions keyed by `weekStart`. Single pass over `items` shared
     /// by both List (rendered as a sorted array) and Grid (looked up by date).
@@ -557,18 +567,20 @@ private struct RecallSheet: View {
                         .accessibilityLabel(mode == .list ? "Switch to grid view" : "Switch to list view")
                         .help(mode == .list ? "Grid view" : "List view")
 
-                        if let url = exportFileURL {
-                            ShareLink(item: url) {
-                                Image(systemName: "square.and.arrow.up")
-                            }
-                            .accessibilityLabel("Export intentions")
-                            .help("Export intentions as Markdown")
+                        // ShareLink is unconditional (no `if let`) so the macOS
+                        // toolbar always renders it. The file content is
+                        // written below in .onAppear / .onChange.
+                        ShareLink(item: exportFileURL) {
+                            Image(systemName: "square.and.arrow.up")
                         }
+                        .accessibilityLabel("Export intentions")
+                        .help("Export intentions as Markdown")
                     }
                 }
             }
-            .task(id: items.count) {
-                exportFileURL = generateExportFile()
+            .onAppear { writeExportFile() }
+            .onChange(of: items.count) { _, _ in
+                writeExportFile()
             }
             .confirmationDialog(
                 "Delete this intention?",
@@ -604,28 +616,19 @@ private struct RecallSheet: View {
 
     // MARK: - Export
 
-    /// Builds a Markdown file of every stored intention, grouped by ISO year,
-    /// sorted most-recent first. Returns a temp URL suitable for ShareLink — the
-    /// `.md` extension drives the suggested filename in Files / iCloud Drive /
-    /// AirDrop receivers. Returns `nil` when there's nothing to export or the
-    /// write fails.
-    ///
-    /// Lives entirely on-device: the markdown string is built locally, written
-    /// to the process's temporary directory, and shared via the system share
-    /// sheet. No network, no third-party services — matches the "your data is
-    /// yours" stance from the vision.
-    private func generateExportFile() -> URL? {
+    /// Writes the current Markdown export to `exportFileURL`. Called from
+    /// `.onAppear` (sheet open) and `.onChange(of: items.count)` (sync in
+    /// while sheet is open). Stays entirely on-device: markdown built
+    /// locally, written to the process's temporary directory, shared via
+    /// the system share sheet. No network, no third-party services —
+    /// matches the "your data is yours" stance from the vision.
+    private func writeExportFile() {
         let markdown = buildExportMarkdown()
-        guard !markdown.isEmpty else { return nil }
-
-        let filename = "WeeklyIntentions-\(exportDateStamp()).md"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        guard !markdown.isEmpty else { return }
         do {
-            try markdown.write(to: url, atomically: true, encoding: .utf8)
-            return url
+            try markdown.write(to: exportFileURL, atomically: true, encoding: .utf8)
         } catch {
             print("Export write failed:", error)
-            return nil
         }
     }
 
@@ -664,14 +667,6 @@ private struct RecallSheet: View {
         df.calendar = sharedCalendar
         df.locale = .current
         df.dateStyle = .long
-        return df.string(from: Date())
-    }
-
-    private func exportDateStamp() -> String {
-        let df = DateFormatter()
-        df.calendar = sharedCalendar
-        df.locale = Locale(identifier: "en_US_POSIX")
-        df.dateFormat = "yyyy-MM-dd"
         return df.string(from: Date())
     }
 
