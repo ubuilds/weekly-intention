@@ -3,6 +3,11 @@ import SwiftData
 
 @main
 struct WeeklyIntentionApp: App {
+    /// Window identifier used by `openWindow(id:)` from the macOS menu bar
+    /// popover, so clicking "Open Weekly Intention" focuses the existing
+    /// window (or creates it if no window is open).
+    static let mainWindowID = "main"
+
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var appState = AppState()
@@ -32,7 +37,7 @@ struct WeeklyIntentionApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: Self.mainWindowID) {
             ContentView()
                 .environment(appState)
                 .environment(networkStatus)
@@ -83,7 +88,6 @@ struct WeeklyIntentionApp: App {
                 }
         }
         .modelContainer(modelContainer)
-
         #if os(macOS)
         .commands {
             CommandMenu("Edit") {
@@ -94,6 +98,20 @@ struct WeeklyIntentionApp: App {
                 .keyboardShortcut("f", modifiers: [.command])
             }
         }
+        #endif
+
+        // macOS menu bar item — the Mac equivalent of the iOS Lock Screen
+        // widget. The same ModelContainer is attached so @Query inside the
+        // menu bar views observes the same SwiftData store the main window
+        // uses, and updates reactively as edits + CloudKit syncs arrive.
+        #if os(macOS)
+        MenuBarExtra {
+            MenuBarContent()
+        } label: {
+            MenuBarLabel()
+        }
+        .menuBarExtraStyle(.window)
+        .modelContainer(modelContainer)
         #endif
     }
 }
