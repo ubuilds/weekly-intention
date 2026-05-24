@@ -474,6 +474,7 @@ private struct RecallSheet: View {
     @State private var searchText: String = ""
     @State private var mode: Mode = .list
     @State private var exportFileURL: URL?
+    @State private var weekPendingDeletion: Date?
     @Environment(AppState.self) private var appState
     @FocusState private var isSearchFocused: Bool
 
@@ -505,32 +506,23 @@ private struct RecallSheet: View {
                 if items.isEmpty {
                     emptyState
                 } else {
-                    VStack(spacing: 0) {
-                        Picker("Mode", selection: $mode) {
-                            ForEach(Mode.allCases) { mode in
-                                Text(mode.label).tag(mode)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .padding(.horizontal)
-                        .padding(.top, 8)
-                        .padding(.bottom, 4)
-
-                        switch mode {
-                        case .list:
-                            listContent
-                        case .grid:
-                            RecallGridView(
-                                calendar: calendar,
-                                intentionsByWeekStart: dedupedByWeekStart,
-                                onPickWeekStart: onPickWeekStart,
-                                onDeleteWeek: onDeleteWeek
-                            )
-                        }
+                    switch mode {
+                    case .list:
+                        listContent
+                    case .grid:
+                        RecallGridView(
+                            calendar: calendar,
+                            intentionsByWeekStart: dedupedByWeekStart,
+                            onPickWeekStart: onPickWeekStart,
+                            onDeleteWeek: { weekStart in requestDeleteWeek(weekStart) }
+                        )
                     }
                 }
             }
             .navigationTitle("Recall")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             // Search applies to List mode only — Grid mode is for scanning the
             // whole year visually, not filtering it down.
             .modifier(SearchableInListMode(mode: mode, searchText: $searchText, isSearchFocused: $isSearchFocused))
@@ -547,6 +539,21 @@ private struct RecallSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { onClose() }
                 }
+                // Mode toggle: a single icon that flips between List and Grid.
+                // Lives in the toolbar so the content area stays uncluttered —
+                // the in-content segmented picker added too much vertical noise
+                // for a feature most opens won't touch.
+                ToolbarItem(placement: .primaryAction) {
+                    if !items.isEmpty {
+                        Button {
+                            mode = (mode == .list) ? .grid : .list
+                        } label: {
+                            Image(systemName: mode == .list ? "square.grid.2x2" : "list.bullet")
+                        }
+                        .accessibilityLabel(mode == .list ? "Switch to grid view" : "Switch to list view")
+                        .help(mode == .list ? "Grid view" : "List view")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     if !items.isEmpty, let url = exportFileURL {
                         ShareLink(item: url) {
@@ -558,6 +565,28 @@ private struct RecallSheet: View {
             }
             .task(id: items.count) {
                 exportFileURL = generateExportFile()
+            }
+            .confirmationDialog(
+                "Delete this intention?",
+                isPresented: Binding(
+                    get: { weekPendingDeletion != nil },
+                    set: { presented in
+                        if !presented { weekPendingDeletion = nil }
+                    }
+                ),
+                titleVisibility: .visible,
+                presenting: weekPendingDeletion
+            ) { weekStart in
+                Button("Delete", role: .destructive) {
+                    onDeleteWeek(weekStart)
+                    weekPendingDeletion = nil
+                }
+                Button("Cancel", role: .cancel) {
+                    weekPendingDeletion = nil
+                }
+            } message: { weekStart in
+                // Be explicit about CloudKit sync — deletion isn't local-only.
+                Text("\(weekRangeText(for: weekStart)) will be removed on every device.")
             }
         }
         #if os(macOS)
@@ -697,7 +726,7 @@ private struct RecallSheet: View {
                     // primary delete affordance on macOS where there's no swipe.
                     .contextMenu {
                         Button(role: .destructive) {
-                            onDeleteWeek(item.weekStart)
+                            requestDeleteWeek(item.weekStart)
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
@@ -712,10 +741,23 @@ private struct RecallSheet: View {
     }
 
     private func deleteRows(at offsets: IndexSet) {
+        // Swipe-to-delete can pass multiple indices in a single gesture in
+        // theory, but the confirmation dialog is one-week-at-a-time. Take the
+        // first valid index — single-row swipe is the only path that actually
+        // produces an IndexSet here today.
         for index in offsets {
             guard sortedItems.indices.contains(index) else { continue }
-            onDeleteWeek(sortedItems[index].weekStart)
+            requestDeleteWeek(sortedItems[index].weekStart)
+            break
         }
+    }
+
+    /// All delete paths (swipe, list context menu, grid context menu) route
+    /// through here. We stage the week for deletion and let the confirmation
+    /// dialog do the actual destructive call to `onDeleteWeek`, so deletion
+    /// can't happen by accident from any surface.
+    private func requestDeleteWeek(_ weekStart: Date) {
+        weekPendingDeletion = weekStart
     }
 
 }
