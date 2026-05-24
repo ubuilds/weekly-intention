@@ -1,84 +1,6 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - App Group Data Reader
-
-/// Reads the current week's intention from the shared App Group UserDefaults.
-/// Self-contained so the watchOS widget extension has no cross-target dependencies.
-///
-/// Mirror of `WidgetSharedStore` (on the iOS side) — both must agree on key names,
-/// ISO formatter shape, and week math. Block 2 of the audit consolidates this
-/// into one source of truth across all four targets.
-private enum WatchSharedReader {
-    static let appGroupID = "group.com.uwebury.weeklyintention"
-
-    struct Snapshot {
-        let weekStart: Date
-        let text: String
-    }
-
-    static func read() -> Snapshot {
-        guard let defaults = UserDefaults(suiteName: appGroupID) else {
-            return Snapshot(weekStart: currentISOWeekStart(), text: "")
-        }
-        let weekStart = parseISODate(defaults.string(forKey: "widget.weekStartISO")) ?? currentISOWeekStart()
-        let text = defaults.string(forKey: "widget.intentionText") ?? ""
-        return Snapshot(weekStart: weekStart, text: text)
-    }
-
-    static func currentISOWeekStart(now: Date = Date()) -> Date {
-        weekStart(for: now)
-    }
-
-    static func weekStart(for date: Date) -> Date {
-        let comps = watchCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
-        return watchCalendar.date(from: comps) ?? watchCalendar.startOfDay(for: date)
-    }
-
-    static func startOfNextWeek(after date: Date) -> Date {
-        let thisWeek = weekStart(for: date)
-        return watchCalendar.date(byAdding: .weekOfYear, value: 1, to: thisWeek) ?? thisWeek
-    }
-
-    private static let isoFormatter: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return f
-    }()
-
-    private static let isoFormatterNoFrac: ISO8601DateFormatter = {
-        let f = ISO8601DateFormatter()
-        f.formatOptions = [.withInternetDateTime]
-        return f
-    }()
-
-    private static func parseISODate(_ str: String?) -> Date? {
-        guard let str else { return nil }
-        return isoFormatter.date(from: str) ?? isoFormatterNoFrac.date(from: str)
-    }
-}
-
-// MARK: - Week Range Formatting
-
-private let watchCalendar: Calendar = {
-    var cal = Calendar(identifier: .iso8601)
-    cal.firstWeekday = 2
-    return cal
-}()
-
-private let watchWeekRangeDateFormatter: DateFormatter = {
-    let df = DateFormatter()
-    df.calendar = watchCalendar
-    df.locale = .current
-    df.setLocalizedDateFormatFromTemplate("MMM d")
-    return df
-}()
-
-private func watchWeekRangeText(for weekStart: Date) -> String {
-    let end = watchCalendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
-    return "\(watchWeekRangeDateFormatter.string(from: weekStart)) – \(watchWeekRangeDateFormatter.string(from: end))"
-}
-
 // MARK: - Timeline Entry
 
 struct WatchIntentionEntry: TimelineEntry {
@@ -94,12 +16,12 @@ struct WatchIntentionProvider: TimelineProvider {
         WatchIntentionEntry(
             date: Date(),
             text: "Focus on what matters.",
-            weekStart: WatchSharedReader.currentISOWeekStart()
+            weekStart: WidgetSharedStore.currentISOWeekStart()
         )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WatchIntentionEntry) -> Void) {
-        let snap = WatchSharedReader.read()
+        let snap = WidgetSharedStore.read()
         completion(WatchIntentionEntry(date: Date(), text: snap.text, weekStart: snap.weekStart))
     }
 
@@ -108,10 +30,10 @@ struct WatchIntentionProvider: TimelineProvider {
     /// `WeeklyIntentionWidget.swift` for the full rationale.
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchIntentionEntry>) -> Void) {
         let now = Date()
-        let snap = WatchSharedReader.read()
+        let snap = WidgetSharedStore.read()
 
-        let currentWeek = WatchSharedReader.currentISOWeekStart(now: now)
-        let snapshotIsForCurrentWeek = watchCalendar.isDate(
+        let currentWeek = WidgetSharedStore.currentISOWeekStart(now: now)
+        let snapshotIsForCurrentWeek = sharedCalendar.isDate(
             snap.weekStart,
             inSameDayAs: currentWeek
         )
@@ -123,10 +45,10 @@ struct WatchIntentionProvider: TimelineProvider {
             currentEntry = WatchIntentionEntry(date: now, text: "", weekStart: currentWeek)
         }
 
-        let nextWeekStart = WatchSharedReader.startOfNextWeek(after: now)
+        let nextWeekStart = WidgetSharedStore.startOfNextWeek(after: now)
         let rolloverEntry = WatchIntentionEntry(date: nextWeekStart, text: "", weekStart: nextWeekStart)
 
-        let refreshAfter = watchCalendar.date(byAdding: .minute, value: 5, to: nextWeekStart)
+        let refreshAfter = sharedCalendar.date(byAdding: .minute, value: 5, to: nextWeekStart)
             ?? nextWeekStart.addingTimeInterval(300)
 
         completion(Timeline(entries: [currentEntry, rolloverEntry], policy: .after(refreshAfter)))
@@ -141,7 +63,7 @@ private struct RectangularView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(watchWeekRangeText(for: entry.weekStart))
+            Text(weekRangeText(for: entry.weekStart))
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .widgetAccentable()

@@ -17,11 +17,7 @@ final class WatchConnectivityReceiver: NSObject, WCSessionDelegate {
     /// App Group shared between this watch app and the watch widget extension.
     /// App Groups are per-device, so this is the watch's own container — separate
     /// from the phone's. WatchConnectivity is what bridges phone → watch.
-    private static let suiteName = "group.com.uwebury.weeklyintention"
-
-    private static let keyWeekStartISO = "widget.weekStartISO"
-    private static let keyIntentionText = "widget.intentionText"
-    private static let keyUpdatedAtISO = "widget.updatedAtISO"
+    private static let suiteName = WidgetSharedStore.appGroupID
 
     private override init() {
         super.init()
@@ -35,7 +31,7 @@ final class WatchConnectivityReceiver: NSObject, WCSessionDelegate {
 
     /// The intention text last received from the phone — for the watch app UI.
     static func readIntentionText() -> String {
-        UserDefaults(suiteName: suiteName)?.string(forKey: keyIntentionText) ?? ""
+        UserDefaults(suiteName: suiteName)?.string(forKey: WidgetSharedStore.Keys.intentionText) ?? ""
     }
 
     /// Ask the iPhone for its current intention and persist the reply.
@@ -67,14 +63,14 @@ final class WatchConnectivityReceiver: NSObject, WCSessionDelegate {
     private func persistAndReload(_ context: [String: Any]) {
         guard let defaults = UserDefaults(suiteName: Self.suiteName) else { return }
 
-        if let weekStartISO = context[Self.keyWeekStartISO] as? String {
-            defaults.set(weekStartISO, forKey: Self.keyWeekStartISO)
+        if let weekStartISO = context[WidgetSharedStore.Keys.weekStartISO] as? String {
+            defaults.set(weekStartISO, forKey: WidgetSharedStore.Keys.weekStartISO)
         }
-        if let text = context[Self.keyIntentionText] as? String {
-            defaults.set(text, forKey: Self.keyIntentionText)
+        if let text = context[WidgetSharedStore.Keys.intentionText] as? String {
+            defaults.set(text, forKey: WidgetSharedStore.Keys.intentionText)
         }
-        if let updatedAt = context[Self.keyUpdatedAtISO] as? String {
-            defaults.set(updatedAt, forKey: Self.keyUpdatedAtISO)
+        if let updatedAt = context[WidgetSharedStore.Keys.updatedAtISO] as? String {
+            defaults.set(updatedAt, forKey: WidgetSharedStore.Keys.updatedAtISO)
         }
         // `synchronize()` is documented as a no-op on modern Cocoa, but on watchOS
         // it still appears to prod cfprefsd into cross-process notification a bit

@@ -22,10 +22,12 @@ final class PhoneToWatchConnector: NSObject, WCSessionDelegate {
         let session = WCSession.default
         guard session.activationState == .activated else { return }
 
+        // Keys + ISO date formatting come from the shared store so the phone and
+        // watch can't disagree about either.
         let context: [String: Any] = [
-            "widget.weekStartISO": weekStartISO,
-            "widget.intentionText": text,
-            "widget.updatedAtISO": ISO8601DateFormatter().string(from: Date())
+            WidgetSharedStore.Keys.weekStartISO: weekStartISO,
+            WidgetSharedStore.Keys.intentionText: text,
+            WidgetSharedStore.Keys.updatedAtISO: WidgetSharedStore.isoDateString(Date())
         ]
 
         do {
@@ -57,11 +59,11 @@ final class PhoneToWatchConnector: NSObject, WCSessionDelegate {
 
         let snapshot = WidgetSharedStore.read()
         var reply: [String: Any] = [
-            "widget.weekStartISO": WidgetSharedStore.isoDateString(snapshot.weekStart),
-            "widget.intentionText": snapshot.text
+            WidgetSharedStore.Keys.weekStartISO: WidgetSharedStore.isoDateString(snapshot.weekStart),
+            WidgetSharedStore.Keys.intentionText: snapshot.text
         ]
         if let updatedAt = snapshot.updatedAt {
-            reply["widget.updatedAtISO"] = WidgetSharedStore.isoDateString(updatedAt)
+            reply[WidgetSharedStore.Keys.updatedAtISO] = WidgetSharedStore.isoDateString(updatedAt)
         }
         replyHandler(reply)
     }

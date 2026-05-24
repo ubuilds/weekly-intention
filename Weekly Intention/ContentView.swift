@@ -73,7 +73,7 @@ struct ContentView: View {
                 .padding(.top, 10)
 
                 TabView(selection: $selectedIndex) {
-                    ForEach(Array(weeks.enumerated()), id: \.offset) { index, weekStart in
+                    ForEach(Array(weeks.enumerated()), id: \.element) { index, weekStart in
                         WeekSlide(
                             weekStart: weekStart,
                             calendar: calendar,
@@ -210,7 +210,7 @@ struct ContentView: View {
                 .padding(.top, 10)
 
                 TabView(selection: $selectedIndex) {
-                    ForEach(Array(weeks.enumerated()), id: \.offset) { index, weekStart in
+                    ForEach(Array(weeks.enumerated()), id: \.element) { index, weekStart in
                         WeekSlide(
                             weekStart: weekStart,
                             calendar: calendar,
