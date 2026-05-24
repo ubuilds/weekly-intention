@@ -30,6 +30,8 @@ xcodebuild -project "Weekly Intention.xcodeproj" -scheme "Weekly Intention" \
 
 **Tests:** there is no test target yet — `Cmd+U` runs nothing. (See ROADMAP "Ideas".)
 
+**Ship it:** when the user says *"ship it"*, the workflow is solo (no PR): stage and commit the working tree as one or more logical commits, switch to `main`, pull, fast-forward merge the feature branch, push `main`, then delete the feature branch (local and remote if it was pushed). Run on your own without re-asking for confirmation.
+
 ---
 
 ## Architecture
