@@ -11,6 +11,7 @@ struct ContentView: View {
     @Query private var stored: [WeeklyIntention]
     @Environment(AppState.self) private var appState
     @Environment(SyncStatus.self) private var syncStatus
+    @Environment(CloudKitAccountStatus.self) private var iCloudAccountStatus
 
     private let calendar = sharedCalendar
 
@@ -57,15 +58,7 @@ struct ContentView: View {
 
                     Spacer()
 
-                    if let label = syncStatus.labelText {
-                        Text(label)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.ultraThinMaterial, in: Capsule())
-                            .accessibilityLabel(label)
-                    }
+                    statusPill
 
                     Button {
                         appState.presentRecall(focusSearch: true)
@@ -130,15 +123,7 @@ struct ContentView: View {
 
                     Spacer()
 
-                    if let label = syncStatus.labelText {
-                        Text(label)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.ultraThinMaterial, in: Capsule())
-                            .accessibilityLabel(label)
-                    }
+                    statusPill
 
                     Button("Recall") {
                         appState.presentRecall(focusSearch: true)
@@ -210,15 +195,7 @@ struct ContentView: View {
 
                     Spacer()
 
-                    if let label = syncStatus.labelText {
-                        Text(label)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(.ultraThinMaterial, in: Capsule())
-                            .accessibilityLabel(label)
-                    }
+                    statusPill
 
                     Button {
                         appState.presentRecall(focusSearch: true)
@@ -282,12 +259,35 @@ struct ContentView: View {
         }
     }
 
-    private func currentWeekStartFallback() -> Date {
-        startOfWeek(for: Date())
+    // MARK: - Status pill
+
+    /// Single status indicator shown in the nav bar. iCloud-account problems take
+    /// precedence over network/sync state — without iCloud, "Offline" is misleading
+    /// because the real problem is that nothing will ever sync. Show at most one
+    /// pill to keep the chrome calm (vision: minimal).
+    @ViewBuilder
+    private var statusPill: some View {
+        if let label = iCloudAccountStatus.labelText {
+            pillView(label: label, accessibility: iCloudAccountStatus.accessibilityDescription ?? label)
+        } else if let label = syncStatus.labelText {
+            pillView(label: label, accessibility: label)
+        }
     }
 
+    private func pillView(label: String, accessibility: String) -> some View {
+        Text(label)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(.ultraThinMaterial, in: Capsule())
+            .accessibilityLabel(accessibility)
+    }
+
+    // MARK: - Week helpers
+
     private func currentWeekStart(from weeks: [Date]) -> Date {
-        weeks[safe: selectedIndex] ?? currentWeekStartFallback()
+        weeks[safe: selectedIndex] ?? WidgetSharedStore.currentISOWeekStart()
     }
 
     private func initWeeks() {
@@ -296,23 +296,39 @@ struct ContentView: View {
     }
 
     private func weekStartsAroundNow() -> [Date] {
-        let currentStart = startOfWeek(for: Date())
+        let currentStart = WidgetSharedStore.currentISOWeekStart()
         return (-weeksBefore...weeksAfter).compactMap { offset in
             calendar.date(byAdding: .weekOfYear, value: offset, to: currentStart)
         }
-    }
-
-    private func startOfWeek(for date: Date) -> Date {
-        let comps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
-        return calendar.date(from: comps) ?? calendar.startOfDay(for: date)
     }
 
     private func indexForWeekStart(_ weekStart: Date, within weeks: [Date]) -> Int? {
         weeks.firstIndex(where: { calendar.isDate($0, inSameDayAs: weekStart) })
     }
 
+    /// O(1) lookup table built from `@Query` results. Recomputed only when
+    /// `stored` changes (SwiftUI re-evaluates `body`, this computed property
+    /// runs once per body), then used by every visible WeekSlide.
+    private var intentionsByWeekStart: [Date: String] {
+        // If duplicates exist (CloudKit conflict not yet converged), prefer the
+        // most recently updated row; fall back to longest text for legacy rows
+        // whose updatedAt is .distantPast.
+        var byWeek: [Date: WeeklyIntention] = [:]
+        for item in stored {
+            let key = WidgetSharedStore.weekStart(for: item.weekStart)
+            if let existing = byWeek[key] {
+                if shouldPrefer(item, over: existing) {
+                    byWeek[key] = item
+                }
+            } else {
+                byWeek[key] = item
+            }
+        }
+        return byWeek.mapValues { $0.text }
+    }
+
     private func intentionText(for weekStart: Date) -> String {
-        stored.first(where: { calendar.isDate($0.weekStart, inSameDayAs: weekStart) })?.text ?? ""
+        intentionsByWeekStart[WidgetSharedStore.weekStart(for: weekStart)] ?? ""
     }
 
     private func beginEdit(weekStart: Date) {
@@ -322,6 +338,7 @@ struct ContentView: View {
 
     private func saveIntention(weekStart: Date, text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let now = Date()
 
         // Enforce “one intention per week” in code (CloudKit does not support unique constraints).
         let matches = stored.filter { calendar.isDate($0.weekStart, inSameDayAs: weekStart) }
@@ -331,30 +348,38 @@ struct ContentView: View {
             for item in matches {
                 modelContext.delete(item)
             }
-        } else if let first = matches.first {
-            // Update the first matching entry.
-            first.text = trimmed
+        } else if !matches.isEmpty {
+            // Update the "best" matching entry (most recently updated, longest on
+            // legacy ties), then delete the rest. Picking by updatedAt rather than
+            // array order means we don't preserve the wrong row when CloudKit has
+            // surfaced duplicates.
+            let keeper = matches.reduce(matches[0]) { best, candidate in
+                shouldPrefer(candidate, over: best) ? candidate : best
+            }
+            keeper.text = trimmed
+            keeper.updatedAt = now
 
-            // Delete any accidental duplicates.
-            if matches.count > 1 {
-                for dup in matches.dropFirst() {
-                    modelContext.delete(dup)
-                }
+            for dup in matches where dup !== keeper {
+                modelContext.delete(dup)
             }
         } else {
             // No entry yet for this week.
-            modelContext.insert(WeeklyIntention(weekStart: weekStart, text: trimmed))
+            modelContext.insert(WeeklyIntention(weekStart: weekStart, text: trimmed, updatedAt: now))
         }
 
         // Persist changes explicitly so CloudKit can propagate them across devices.
+        // The widget cache + watch push only run on a successful save — otherwise
+        // the widget would advertise text that isn't actually stored, violating
+        // the "convergence" principle.
         do {
             try modelContext.save()
         } catch {
             print("SwiftData save failed:", error)
+            return
         }
 
         // If the user edited the CURRENT week, update the widget cache too.
-        let currentWeek = startOfWeek(for: Date())
+        let currentWeek = WidgetSharedStore.currentISOWeekStart()
         if calendar.isDate(weekStart, inSameDayAs: currentWeek) {
             WidgetSharedStore.writeCurrentWeekIntention(weekStart: currentWeek, text: trimmed)
 
@@ -370,7 +395,6 @@ struct ContentView: View {
             )
             #endif
         }
-
     }
 
     private struct DateItem: Identifiable {
@@ -400,14 +424,14 @@ private struct RecallSheet: View {
         // Defensive read-side dedupe: CloudKit can surface multiple rows for the
         // same weekStart if two devices wrote before convergence. saveIntention()
         // enforces one-per-week on write, but stale duplicates may still exist.
-        // Prefer the entry with the longest trimmed text on ties (best guess at
-        // "the real one"); ordering is otherwise stable.
+        // Prefer the most recently updated row; fall back to longest text for
+        // legacy rows whose updatedAt is .distantPast.
         let deduped = Dictionary(grouping: items, by: { $0.weekStart })
             .values
-            .compactMap { group in
-                group.max { lhs, rhs in
-                    lhs.text.trimmingCharacters(in: .whitespacesAndNewlines).count
-                        < rhs.text.trimmingCharacters(in: .whitespacesAndNewlines).count
+            .compactMap { group -> WeeklyIntention? in
+                group.reduce(nil) { (best: WeeklyIntention?, candidate: WeeklyIntention) in
+                    guard let best else { return candidate }
+                    return shouldPrefer(candidate, over: best) ? candidate : best
                 }
             }
 
@@ -493,4 +517,18 @@ private extension Array {
         guard indices.contains(index) else { return nil }
         return self[index]
     }
+}
+
+/// Returns `true` when `candidate` should win a duplicate-resolution tiebreak
+/// against `incumbent`. Prefer the more recently updated row; when `updatedAt`
+/// ties (e.g. both legacy rows at `.distantPast`), prefer the longer trimmed
+/// text — a best-effort guess at "the real intention" rather than the empty
+/// or truncated one.
+fileprivate func shouldPrefer(_ candidate: WeeklyIntention, over incumbent: WeeklyIntention) -> Bool {
+    if candidate.updatedAt != incumbent.updatedAt {
+        return candidate.updatedAt > incumbent.updatedAt
+    }
+    let candidateLen = candidate.text.trimmingCharacters(in: .whitespacesAndNewlines).count
+    let incumbentLen = incumbent.text.trimmingCharacters(in: .whitespacesAndNewlines).count
+    return candidateLen > incumbentLen
 }

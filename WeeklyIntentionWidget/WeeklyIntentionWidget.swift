@@ -30,19 +30,60 @@ struct WeeklyIntentionProvider: TimelineProvider {
         )
     }
 
+    /// Two-entry timeline:
+    /// - now → the cached snapshot (today's intention)
+    /// - next Monday 00:00 → an empty entry pinned to the new week, so the widget
+    ///   transitions cleanly to "Set your weekly intention" even if the user
+    ///   doesn't open the app over the weekend
+    ///
+    /// `WidgetSharedStore.writeCurrentWeekIntention` reloads the timeline on every
+    /// save, so the empty rollover entry only ever surfaces if the user genuinely
+    /// hasn't set the new week yet.
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeeklyIntentionEntry>) -> Void) {
+        let now = Date()
         let snap = WidgetSharedStore.read()
 
-        let entry = WeeklyIntentionEntry(
-            date: Date(),
-            weekStart: snap.weekStart,
-            text: snap.text,
-            updatedAt: snap.updatedAt
+        let currentWeek = WidgetSharedStore.currentISOWeekStart(now: now)
+        let snapshotIsForCurrentWeek = sharedCalendar.isDate(
+            snap.weekStart,
+            inSameDayAs: currentWeek
         )
 
-        // Refresh periodically (and also on reloadAllTimelines from the app)
-        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+        // First entry — current snapshot, but if it's stale (last week's text
+        // still cached), treat as empty for honesty.
+        let currentEntry: WeeklyIntentionEntry
+        if snapshotIsForCurrentWeek {
+            currentEntry = WeeklyIntentionEntry(
+                date: now,
+                weekStart: snap.weekStart,
+                text: snap.text,
+                updatedAt: snap.updatedAt
+            )
+        } else {
+            currentEntry = WeeklyIntentionEntry(
+                date: now,
+                weekStart: currentWeek,
+                text: "",
+                updatedAt: nil
+            )
+        }
+
+        // Second entry — the rollover. At next Monday 00:00 the widget
+        // displays an empty entry for the new week until the user sets one.
+        let nextWeekStart = WidgetSharedStore.startOfNextWeek(after: now)
+        let rolloverEntry = WeeklyIntentionEntry(
+            date: nextWeekStart,
+            weekStart: nextWeekStart,
+            text: "",
+            updatedAt: nil
+        )
+
+        // Refresh again shortly after the rollover so we re-read the App Group
+        // cache (the user may have set next week's intention by then).
+        let refreshAfter = sharedCalendar.date(byAdding: .minute, value: 5, to: nextWeekStart)
+            ?? nextWeekStart.addingTimeInterval(300)
+
+        completion(Timeline(entries: [currentEntry, rolloverEntry], policy: .after(refreshAfter)))
     }
 }
 

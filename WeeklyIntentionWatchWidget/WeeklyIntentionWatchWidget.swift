@@ -5,6 +5,10 @@ import SwiftUI
 
 /// Reads the current week's intention from the shared App Group UserDefaults.
 /// Self-contained so the watchOS widget extension has no cross-target dependencies.
+///
+/// Mirror of `WidgetSharedStore` (on the iOS side) — both must agree on key names,
+/// ISO formatter shape, and week math. Block 2 of the audit consolidates this
+/// into one source of truth across all four targets.
 private enum WatchSharedReader {
     static let appGroupID = "group.com.uwebury.weeklyintention"
 
@@ -23,12 +27,17 @@ private enum WatchSharedReader {
     }
 
     static func currentISOWeekStart(now: Date = Date()) -> Date {
-        var cal = Calendar(identifier: .iso8601)
-        cal.firstWeekday = 2
-        let startOfDay = cal.startOfDay(for: now)
-        let weekday = cal.component(.weekday, from: startOfDay)
-        let delta = (weekday + 5) % 7
-        return cal.date(byAdding: .day, value: -delta, to: startOfDay) ?? startOfDay
+        weekStart(for: now)
+    }
+
+    static func weekStart(for date: Date) -> Date {
+        let comps = watchCalendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return watchCalendar.date(from: comps) ?? watchCalendar.startOfDay(for: date)
+    }
+
+    static func startOfNextWeek(after date: Date) -> Date {
+        let thisWeek = weekStart(for: date)
+        return watchCalendar.date(byAdding: .weekOfYear, value: 1, to: thisWeek) ?? thisWeek
     }
 
     private static let isoFormatter: ISO8601DateFormatter = {
@@ -94,14 +103,33 @@ struct WatchIntentionProvider: TimelineProvider {
         completion(WatchIntentionEntry(date: Date(), text: snap.text, weekStart: snap.weekStart))
     }
 
+    /// Two-entry timeline: current snapshot, then an empty rollover entry pinned
+    /// to next Monday 00:00. Matches the iOS widget's behavior — see
+    /// `WeeklyIntentionWidget.swift` for the full rationale.
     func getTimeline(in context: Context, completion: @escaping (Timeline<WatchIntentionEntry>) -> Void) {
+        let now = Date()
         let snap = WatchSharedReader.read()
-        let entry = WatchIntentionEntry(date: Date(), text: snap.text, weekStart: snap.weekStart)
 
-        // Refresh every 30 minutes (also refreshes on reloadAllTimelines from the iOS app).
-        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 30, to: Date())
-            ?? Date().addingTimeInterval(1800)
-        completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+        let currentWeek = WatchSharedReader.currentISOWeekStart(now: now)
+        let snapshotIsForCurrentWeek = watchCalendar.isDate(
+            snap.weekStart,
+            inSameDayAs: currentWeek
+        )
+
+        let currentEntry: WatchIntentionEntry
+        if snapshotIsForCurrentWeek {
+            currentEntry = WatchIntentionEntry(date: now, text: snap.text, weekStart: snap.weekStart)
+        } else {
+            currentEntry = WatchIntentionEntry(date: now, text: "", weekStart: currentWeek)
+        }
+
+        let nextWeekStart = WatchSharedReader.startOfNextWeek(after: now)
+        let rolloverEntry = WatchIntentionEntry(date: nextWeekStart, text: "", weekStart: nextWeekStart)
+
+        let refreshAfter = watchCalendar.date(byAdding: .minute, value: 5, to: nextWeekStart)
+            ?? nextWeekStart.addingTimeInterval(300)
+
+        completion(Timeline(entries: [currentEntry, rolloverEntry], policy: .after(refreshAfter)))
     }
 }
 

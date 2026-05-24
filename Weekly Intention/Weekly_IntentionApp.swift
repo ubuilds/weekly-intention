@@ -8,6 +8,7 @@ struct WeeklyIntentionApp: App {
     @State private var appState = AppState()
     @State private var networkStatus = NetworkStatus()
     @State private var syncStatus = SyncStatus()
+    @State private var iCloudAccountStatus = CloudKitAccountStatus()
     private let modelContainer: ModelContainer
 
     init() {
@@ -36,6 +37,7 @@ struct WeeklyIntentionApp: App {
                 .environment(appState)
                 .environment(networkStatus)
                 .environment(syncStatus)
+                .environment(iCloudAccountStatus)
                 .onAppear {
                     syncStatus.handleNetworkChange(isOnline: networkStatus.isOnline)
                 }
@@ -45,13 +47,16 @@ struct WeeklyIntentionApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         syncStatus.handleNetworkChange(isOnline: networkStatus.isOnline)
+                        iCloudAccountStatus.refresh()
 
                         // Mirror current-week intention into widget cache after potential CloudKit sync.
                         // Week math goes through the shared ISO (Monday-based) calendar — never Calendar.current.
                         let weekStart = WidgetSharedStore.currentISOWeekStart()
                         let weekEnd = sharedCalendar.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart
 
-                        Task {
+                        // `mainContext` is @MainActor — annotate the Task so we don't
+                        // accidentally cross actors under Swift 6 strict concurrency.
+                        Task { @MainActor in
                             do {
                                 let descriptor = FetchDescriptor<WeeklyIntention>(
                                     predicate: #Predicate { $0.weekStart >= weekStart && $0.weekStart < weekEnd }
