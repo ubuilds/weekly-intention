@@ -8,6 +8,12 @@ struct WeeklyIntentionApp: App {
     /// window (or creates it if no window is open).
     static let mainWindowID = "main"
 
+    #if os(macOS)
+    // Suppresses SwiftUI's default "quit on last-window-closed" so the menu
+    // bar item persists after the window is closed (see MacAppDelegate).
+    @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
+    #endif
+
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var appState = AppState()

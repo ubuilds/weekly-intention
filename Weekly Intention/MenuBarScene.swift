@@ -4,6 +4,18 @@ import SwiftData
 #if os(macOS)
 import AppKit
 
+/// Keeps the app alive when the last window is closed, so the menu bar
+/// item stays present. Without this, SwiftUI's default `WindowGroup`
+/// behavior terminates the app on last-window-closed and the menu bar
+/// disappears with it — defeating the point of having a glanceable
+/// surface. Quitting now requires an explicit ⌘Q or the "Quit" button
+/// in the menu bar popover.
+final class MacAppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
+    }
+}
+
 /// macOS-only views for the menu bar item.
 ///
 /// The menu bar is the macOS equivalent of the iOS Lock Screen widget — a
@@ -85,6 +97,21 @@ struct MenuBarContent: View {
             }
             .keyboardShortcut(.return, modifiers: [])
             .buttonStyle(.borderedProminent)
+
+            // Quit affordance — the app stays running with just the menu bar
+            // after the window closes (see MacAppDelegate), so users need a
+            // discoverable way to quit besides ⌘Q. Kept small and secondary
+            // so it doesn't compete with the primary "Open" action.
+            HStack {
+                Spacer()
+                Button("Quit Weekly Intention") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .font(.caption)
+                .keyboardShortcut("q", modifiers: [.command])
+            }
         }
         .padding(16)
         .frame(width: 280)
