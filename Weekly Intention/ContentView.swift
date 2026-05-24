@@ -251,6 +251,9 @@ struct ContentView: View {
                     }
                     appState.isRecallPresented = false
                 },
+                onDeleteWeek: { weekStart in
+                    deleteIntention(forWeekStart: weekStart)
+                },
                 onClose: {
                     appState.isRecallPresented = false
                 }
@@ -397,6 +400,46 @@ struct ContentView: View {
         }
     }
 
+    /// Deletes every stored row that belongs to `weekStart`. Mirrors the
+    /// "cleared text" branch of `saveIntention` — CloudKit can have duplicates
+    /// for one weekStart, and deleting the Recall row should remove all of
+    /// them, not just the one the dedupe surfaced.
+    ///
+    /// If the deleted week is the current week, the App Group cache and the
+    /// watch are reset to empty so widgets don't keep showing the just-deleted
+    /// text. Cache write + watch push only run on a successful save.
+    private func deleteIntention(forWeekStart weekStart: Date) {
+        let matches = stored.filter { calendar.isDate($0.weekStart, inSameDayAs: weekStart) }
+        guard !matches.isEmpty else { return }
+
+        for item in matches {
+            modelContext.delete(item)
+        }
+
+        do {
+            try modelContext.save()
+        } catch {
+            print("SwiftData delete failed:", error)
+            return
+        }
+
+        let currentWeek = WidgetSharedStore.currentISOWeekStart()
+        if calendar.isDate(weekStart, inSameDayAs: currentWeek) {
+            WidgetSharedStore.writeCurrentWeekIntention(weekStart: currentWeek, text: "")
+
+            #if canImport(WidgetKit)
+            WidgetCenter.shared.reloadTimelines(ofKind: "WeeklyIntentionWidget")
+            #endif
+
+            #if canImport(WatchConnectivity)
+            PhoneToWatchConnector.shared.sendIntention(
+                weekStartISO: WidgetSharedStore.isoDateString(currentWeek),
+                text: ""
+            )
+            #endif
+        }
+    }
+
     private struct DateItem: Identifiable {
         let id: Date
         let date: Date
@@ -414,6 +457,7 @@ private struct RecallSheet: View {
     let calendar: Calendar
     let items: [WeeklyIntention]
     let onPickWeekStart: (Date) -> Void
+    let onDeleteWeek: (Date) -> Void
     let onClose: () -> Void
 
     enum Mode: String, CaseIterable, Identifiable {
@@ -479,7 +523,8 @@ private struct RecallSheet: View {
                             RecallGridView(
                                 calendar: calendar,
                                 intentionsByWeekStart: dedupedByWeekStart,
-                                onPickWeekStart: onPickWeekStart
+                                onPickWeekStart: onPickWeekStart,
+                                onDeleteWeek: onDeleteWeek
                             )
                         }
                     }
@@ -648,8 +693,28 @@ private struct RecallSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .buttonStyle(.plain)
+                    // Long-press menu surface works on iOS *and* macOS; it's the
+                    // primary delete affordance on macOS where there's no swipe.
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            onDeleteWeek(item.weekStart)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
+                // iOS-native swipe-to-delete. Maps the swiped row index back to
+                // its `weekStart` and lets the parent remove every stored row
+                // for that week (CloudKit duplicates included).
+                .onDelete(perform: deleteRows)
             }
+        }
+    }
+
+    private func deleteRows(at offsets: IndexSet) {
+        for index in offsets {
+            guard sortedItems.indices.contains(index) else { continue }
+            onDeleteWeek(sortedItems[index].weekStart)
         }
     }
 
@@ -682,6 +747,7 @@ private struct RecallGridView: View {
     let calendar: Calendar
     let intentionsByWeekStart: [Date: WeeklyIntention]
     let onPickWeekStart: (Date) -> Void
+    let onDeleteWeek: (Date) -> Void
 
     @State private var displayedYear: Int = sharedCalendar.component(.yearForWeekOfYear, from: Date())
 
@@ -699,6 +765,18 @@ private struct RecallGridView: View {
                         cellView(for: cell)
                             .onTapGesture {
                                 onPickWeekStart(cell.weekStart)
+                            }
+                            .contextMenu {
+                                // Only filled weeks can be deleted — no point
+                                // showing a Delete action on a week that has
+                                // nothing to delete.
+                                if cell.intention != nil {
+                                    Button(role: .destructive) {
+                                        onDeleteWeek(cell.weekStart)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
                             }
                     }
                 }
