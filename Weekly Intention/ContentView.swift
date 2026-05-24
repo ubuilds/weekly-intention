@@ -429,6 +429,7 @@ private struct RecallSheet: View {
 
     @State private var searchText: String = ""
     @State private var mode: Mode = .list
+    @State private var exportFileURL: URL?
     @Environment(AppState.self) private var appState
     @FocusState private var isSearchFocused: Bool
 
@@ -501,6 +502,17 @@ private struct RecallSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { onClose() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    if !items.isEmpty, let url = exportFileURL {
+                        ShareLink(item: url) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Export intentions")
+                    }
+                }
+            }
+            .task(id: items.count) {
+                exportFileURL = generateExportFile()
             }
         }
         #if os(macOS)
@@ -510,6 +522,79 @@ private struct RecallSheet: View {
         #if os(iOS)
         .presentationDetents([.medium, .large])
         #endif
+    }
+
+    // MARK: - Export
+
+    /// Builds a Markdown file of every stored intention, grouped by ISO year,
+    /// sorted most-recent first. Returns a temp URL suitable for ShareLink — the
+    /// `.md` extension drives the suggested filename in Files / iCloud Drive /
+    /// AirDrop receivers. Returns `nil` when there's nothing to export or the
+    /// write fails.
+    ///
+    /// Lives entirely on-device: the markdown string is built locally, written
+    /// to the process's temporary directory, and shared via the system share
+    /// sheet. No network, no third-party services — matches the "your data is
+    /// yours" stance from the vision.
+    private func generateExportFile() -> URL? {
+        let markdown = buildExportMarkdown()
+        guard !markdown.isEmpty else { return nil }
+
+        let filename = "WeeklyIntentions-\(exportDateStamp()).md"
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        do {
+            try markdown.write(to: url, atomically: true, encoding: .utf8)
+            return url
+        } catch {
+            print("Export write failed:", error)
+            return nil
+        }
+    }
+
+    private func buildExportMarkdown() -> String {
+        let deduped = Array(dedupedByWeekStart.values).sorted { $0.weekStart > $1.weekStart }
+        guard !deduped.isEmpty else { return "" }
+
+        var lines: [String] = []
+        lines.append("# Weekly Intentions")
+        lines.append("")
+        lines.append("*Exported \(exportTodayLongString())*")
+        lines.append("")
+
+        var currentYear: Int?
+        for item in deduped {
+            let year = sharedCalendar.component(.yearForWeekOfYear, from: item.weekStart)
+            let week = sharedCalendar.component(.weekOfYear, from: item.weekStart)
+            if year != currentYear {
+                lines.append("## \(year)")
+                lines.append("")
+                currentYear = year
+            }
+            let range = weekRangeText(for: item.weekStart)
+            let text = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            lines.append("### Week \(week) — \(range)")
+            lines.append("")
+            lines.append(text)
+            lines.append("")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    private func exportTodayLongString() -> String {
+        let df = DateFormatter()
+        df.calendar = sharedCalendar
+        df.locale = .current
+        df.dateStyle = .long
+        return df.string(from: Date())
+    }
+
+    private func exportDateStamp() -> String {
+        let df = DateFormatter()
+        df.calendar = sharedCalendar
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.dateFormat = "yyyy-MM-dd"
+        return df.string(from: Date())
     }
 
     @ViewBuilder
