@@ -115,6 +115,13 @@ private struct HomeScreenView: View {
     }
 }
 
+// Accessory families (Lock Screen on iPhone, watch complications on watchOS) are
+// `@available(macOS, unavailable)` — the iOS widget extension also builds for
+// macOS, so the accessory view types and their switch cases must be compile-time
+// gated out of the macOS build. The macOS widget surfaces (Notification Center,
+// the menu bar item) only ever render the `.system*` families anyway.
+#if !os(macOS)
+
 /// Lock Screen rectangular family — week range tiny on top, intention bold below.
 private struct AccessoryRectangularView: View {
     let entry: WeeklyIntentionEntry
@@ -182,6 +189,8 @@ private struct AccessoryInlineView: View {
     }
 }
 
+#endif
+
 // MARK: - Widget View Router
 
 struct WeeklyIntentionWidgetView: View {
@@ -191,12 +200,14 @@ struct WeeklyIntentionWidgetView: View {
     @ViewBuilder
     private var content: some View {
         switch family {
+        #if !os(macOS)
         case .accessoryRectangular:
             AccessoryRectangularView(entry: entry)
         case .accessoryCircular:
             AccessoryCircularView(entry: entry)
         case .accessoryInline:
             AccessoryInlineView(entry: entry)
+        #endif
         default:
             HomeScreenView(entry: entry)
         }
@@ -215,19 +226,27 @@ struct WeeklyIntentionWidgetView: View {
 struct WeeklyIntentionWidget: Widget {
     let kind: String = "WeeklyIntentionWidget"
 
+    /// Supported families differ by platform: macOS WidgetKit has no Lock Screen
+    /// (or equivalent), and the `.accessory*` cases are marked unavailable there,
+    /// so the list collapses to the home-screen families. iOS / iPadOS / visionOS
+    /// get the full set.
+    private static var families: [WidgetFamily] {
+        #if os(macOS)
+        return [.systemSmall, .systemMedium, .systemLarge]
+        #else
+        return [
+            .systemSmall, .systemMedium, .systemLarge,
+            .accessoryInline, .accessoryRectangular, .accessoryCircular,
+        ]
+        #endif
+    }
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WeeklyIntentionProvider()) { entry in
             WeeklyIntentionWidgetView(entry: entry)
         }
         .configurationDisplayName("Weekly Intention")
         .description("Shows your current week’s intention.")
-        .supportedFamilies([
-            .systemSmall,
-            .systemMedium,
-            .systemLarge,
-            .accessoryInline,
-            .accessoryRectangular,
-            .accessoryCircular
-        ])
+        .supportedFamilies(Self.families)
     }
 }
