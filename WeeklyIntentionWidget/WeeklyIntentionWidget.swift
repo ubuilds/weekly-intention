@@ -87,10 +87,13 @@ struct WeeklyIntentionProvider: TimelineProvider {
     }
 }
 
-struct WeeklyIntentionWidgetView: View {
-    var entry: WeeklyIntentionProvider.Entry
+// MARK: - Widget Views
 
-    private var content: some View {
+/// Home Screen families (.systemSmall, .systemMedium, .systemLarge).
+private struct HomeScreenView: View {
+    let entry: WeeklyIntentionEntry
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(weekRangeText(for: entry.weekStart))
                 .font(.caption)
@@ -110,6 +113,94 @@ struct WeeklyIntentionWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding()
     }
+}
+
+/// Lock Screen rectangular family — week range tiny on top, intention bold below.
+private struct AccessoryRectangularView: View {
+    let entry: WeeklyIntentionEntry
+
+    var body: some View {
+        VStack(alignment: .center, spacing: 2) {
+            Text(weekRangeText(for: entry.weekStart))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .widgetAccentable()
+
+            if entry.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text("Set your weekly intention")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text(entry.text)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.6)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+}
+
+/// Lock Screen circular family — icon when empty, condensed text when present.
+private struct AccessoryCircularView: View {
+    let entry: WeeklyIntentionEntry
+
+    var body: some View {
+        ZStack {
+            AccessoryWidgetBackground()
+            if entry.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Image(systemName: "text.quote")
+                    .font(.title3)
+            } else {
+                Text(entry.text)
+                    .font(.caption2)
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.6)
+                    .multilineTextAlignment(.center)
+                    .padding(4)
+            }
+        }
+    }
+}
+
+/// Lock Screen inline family — single line of text in the status-bar slot.
+private struct AccessoryInlineView: View {
+    let entry: WeeklyIntentionEntry
+
+    var body: some View {
+        if entry.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            Text("Set your weekly intention")
+        } else {
+            Text(entry.text)
+        }
+    }
+}
+
+// MARK: - Widget View Router
+
+struct WeeklyIntentionWidgetView: View {
+    @Environment(\.widgetFamily) private var family
+    var entry: WeeklyIntentionProvider.Entry
+
+    @ViewBuilder
+    private var content: some View {
+        switch family {
+        case .accessoryRectangular:
+            AccessoryRectangularView(entry: entry)
+        case .accessoryCircular:
+            AccessoryCircularView(entry: entry)
+        case .accessoryInline:
+            AccessoryInlineView(entry: entry)
+        default:
+            HomeScreenView(entry: entry)
+        }
+    }
 
     var body: some View {
         if #available(iOS 17.0, macOS 14.0, *) {
@@ -119,7 +210,6 @@ struct WeeklyIntentionWidgetView: View {
             content
         }
     }
-
 }
 
 struct WeeklyIntentionWidget: Widget {
@@ -131,6 +221,13 @@ struct WeeklyIntentionWidget: Widget {
         }
         .configurationDisplayName("Weekly Intention")
         .description("Shows your current week’s intention.")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .supportedFamilies([
+            .systemSmall,
+            .systemMedium,
+            .systemLarge,
+            .accessoryInline,
+            .accessoryRectangular,
+            .accessoryCircular
+        ])
     }
 }
